@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+const int timerDurationInSeconds = 25 * 60; // 25 minutes in seconds
+
 void main() {
   runApp(const MyApp());
 }
@@ -29,7 +31,7 @@ class TimerScreen extends StatefulWidget {
 }
 
 class _TimerScreenState extends State<TimerScreen> {
-  int _remainingSeconds = 25; // 25 minutes in seconds
+  int _remainingSeconds = timerDurationInSeconds;
   Timer? _timer;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -58,7 +60,7 @@ class _TimerScreenState extends State<TimerScreen> {
   void _resetTimer() {
     _timer?.cancel();
     setState(() {
-      _remainingSeconds = 25; // Reset back to 25 minutes
+      _remainingSeconds = timerDurationInSeconds;
     });
   }
 
