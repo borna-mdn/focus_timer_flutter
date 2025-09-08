@@ -1,39 +1,47 @@
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'tray_controller.dart';
 
-const int timerDurationInSeconds = 25 * 60; // 25 minutes in seconds
+const int timerDurationInSeconds = 10; // TODO: Change to 25 minutes in seconds
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized;
+  runApp(const FocusTimerApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FocusTimerApp extends StatefulWidget {
+  const FocusTimerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Focus Timer',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
-      ),
-      home: const TimerScreen(),
-    );
-  }
+  State<StatefulWidget> createState() => _FocusTimerAppState();
 }
 
-class TimerScreen extends StatefulWidget {
-  const TimerScreen({super.key});
-
-  @override
-  State<TimerScreen> createState() => _TimerScreenState();
-}
-
-class _TimerScreenState extends State<TimerScreen> {
+class _FocusTimerAppState extends State<FocusTimerApp> {
+  late final TrayController tray;
   int _remainingSeconds = timerDurationInSeconds;
   Timer? _timer;
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    tray = TrayController(
+      onStart: _startTimer,
+      onPause: _pauseTimer,
+      onReset: _resetTimer,
+    );
+    tray.init(initialTitle: _format(_remainingSeconds));
+  }
+
+  String _format(int remainingSeconds) {
+    final s = remainingSeconds % 60;
+    final m = (remainingSeconds ~/ 60) % 60;
+    final h = remainingSeconds ~/ 3600;
+    return h > 0
+        ? "${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}"
+        : "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}";
+  }
 
   void _startTimer() {
     if (_timer != null && _timer!.isActive) return; // Prevent multiple timers
@@ -42,6 +50,7 @@ class _TimerScreenState extends State<TimerScreen> {
         setState(() {
           _remainingSeconds--;
         });
+        tray.updateTitle(_format(_remainingSeconds));
       } else {
         timer.cancel();
         _playAlarm();
@@ -62,47 +71,51 @@ class _TimerScreenState extends State<TimerScreen> {
     setState(() {
       _remainingSeconds = timerDurationInSeconds;
     });
+    tray.updateTitle(_format(_remainingSeconds));
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    tray.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final minutes = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
-    final seconds = (_remainingSeconds % 60).toString().padLeft(2, '0');
-
-    return Scaffold(
-      appBar: AppBar(title: const Text("Timer")),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("$minutes:$seconds", style: const TextStyle(fontSize: 48)),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _startTimer,
-                  child: const Text("Start"),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _pauseTimer,
-                  child: const Text("Pause"),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _resetTimer,
-                  child: const Text("Reset"),
-                ),
-              ],
-            ),
-          ],
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: const Text("Focus Timer")),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _format(_remainingSeconds),
+                style: const TextStyle(fontSize: 48),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _startTimer,
+                    child: const Text("Start"),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _pauseTimer,
+                    child: const Text("Pause"),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _resetTimer,
+                    child: const Text("Reset"),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

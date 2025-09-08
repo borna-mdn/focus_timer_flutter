@@ -33,6 +33,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1
   audioplayers: ^6.5.1
+  system_tray: ^2.0.3
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +45,7 @@ flutter:
 
   assets:
     - assets/sounds/final_beep.mp3
+    - assets/images/timerTemplate.pdf
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
